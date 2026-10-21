@@ -53,10 +53,13 @@ for development and demos:
 
 ```bash
 brew install node@22 postgresql@16
+brew link --force --overwrite node@22                     # node@22 is keg-only
+export PATH="$(brew --prefix postgresql@16)/bin:$PATH"    # psql (keg-only); add to ~/.zshrc
 brew services start postgresql@16
 psql postgres -c "CREATE USER store WITH PASSWORD 'store' CREATEDB;" -c "CREATE DATABASE store OWNER store;"
 
 git clone https://github.com/tejachennu/store-desktop-app.git && cd store-desktop-app
+git checkout claude/friendly-hypatia-0lzq0e               # until merged into main
 npm install
 cp apps/server/.env.example apps/server/.env
 npm run seed -w @store/server -- --demo
