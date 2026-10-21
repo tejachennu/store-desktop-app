@@ -81,6 +81,7 @@ export function PosPage() {
   const [paying, setPaying] = useState(false);
   const [lastSale, setLastSale] = useState<ApiResult<'sales.get'> | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [pickerKey, setPickerKey] = useState(0);
   const scanRef = useRef<HTMLInputElement>(null);
   const customerRef = useRef<HTMLInputElement>(null);
   const print = usePrinter();
@@ -137,6 +138,7 @@ export function PosPage() {
     setBillDiscountText('');
     setQuote(null);
     if (exchangeReturnId) setParams({});
+    setPickerKey((k) => k + 1); // remount the scan box to clear leftover text / errors
     setTimeout(() => scanRef.current?.focus(), 0);
   };
 
@@ -154,7 +156,7 @@ export function PosPage() {
       <Paper sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
           <Box sx={{ flex: 1 }}>
-            <ProductPicker inputRef={scanRef} autoFocus onPick={addProduct} />
+            <ProductPicker key={pickerKey} inputRef={scanRef} autoFocus onPick={addProduct} />
           </Box>
           {exchangeReturnId && <Chip color="warning" label="Exchange sale (linked to return)" onDelete={() => setParams({})} />}
           <Typography variant="caption" color="text.secondary">

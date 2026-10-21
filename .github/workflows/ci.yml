@@ -24,14 +24,14 @@ jobs:
           POSTGRES_DB: store_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U store" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U store -d store_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       TEST_DATABASE_URL: postgres://store:store@localhost:5432/store_test
       TEST_E2E_DATABASE_URL: postgres://store:store@localhost:5432/store_test_e2e
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -52,10 +52,10 @@ jobs:
           POSTGRES_DB: store_ui_smoke
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U store" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U store -d store_ui_smoke" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -77,8 +77,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm

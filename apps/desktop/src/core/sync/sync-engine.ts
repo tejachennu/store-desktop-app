@@ -51,7 +51,8 @@ export class SyncEngine {
   private failures = 0;
   private blockedUntil = 0;
   private status: SyncStatus;
-  private stopped = false;
+  // Background timers only run between start() and stop(); syncNow() always works.
+  private stopped = true;
 
   constructor(private o: SyncEngineOptions) {
     const c = outboxCounts(o.db);
