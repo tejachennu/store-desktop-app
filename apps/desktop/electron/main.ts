@@ -103,6 +103,20 @@ async function printHtml(html: string, opts: { silent?: boolean; deviceName?: st
 }
 
 app.whenReady().then(async () => {
+  try {
+    await start();
+  } catch (err) {
+    // Without this the app would exit silently (e.g. a missing native module or a locked database).
+    log('FATAL', 'startup failed', err);
+    dialog.showErrorBox(
+      'Store Manager could not start',
+      `${(err as Error).message}\n\nDetails were written to ${logFile}. Your data in ${dataDir} has not been changed.`,
+    );
+    app.exit(1);
+  }
+});
+
+async function start() {
   // Strict CSP for the renderer (no remote code; API calls go through the main process).
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -175,7 +189,7 @@ app.whenReady().then(async () => {
 
   createWindow();
   core.start();
-});
+}
 
 app.on('second-instance', () => {
   if (win) {

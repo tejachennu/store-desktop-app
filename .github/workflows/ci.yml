@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Typecheck & tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: store
+          POSTGRES_PASSWORD: store
+          POSTGRES_DB: store_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U store" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      TEST_DATABASE_URL: postgres://store:store@localhost:5432/store_test
+      TEST_E2E_DATABASE_URL: postgres://store:store@localhost:5432/store_test_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  ui-smoke:
+    name: Electron UI smoke test
+    needs: test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: store
+          POSTGRES_PASSWORD: store
+          POSTGRES_DB: store_ui_smoke
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U store" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run rebuild:electron -w @store/desktop
+      - run: npm run build -w @store/desktop
+      - run: xvfb-run -a npm run test:ui -w @store/desktop
+        env:
+          DATABASE_URL: postgres://store:store@localhost:5432/store_ui_smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-smoke-screenshots
+          path: apps/desktop/e2e-ui/output/
+
+  windows-installer:
+    name: Windows installer
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist -w @store/desktop
+        env:
+          # Optional code signing: add these as repository secrets.
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-manager-windows
+          path: apps/desktop/release/*.exe

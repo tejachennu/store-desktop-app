@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsup src/index.ts src/db/migrate-cli.ts src/db/seed.ts --format esm --target node22 --out-dir dist --clean --noExternal @store/shared && node scripts/copy-migrations.mjs",
+    "build": "tsup && node scripts/copy-migrations.mjs",
     "migrate": "tsx src/db/migrate-cli.ts",
     "seed": "tsx src/db/seed.ts",
     "typecheck": "tsc -p tsconfig.json",

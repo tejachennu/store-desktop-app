@@ -10,7 +10,10 @@ files:
 # Native SQLite binding must live outside the asar archive.
 asarUnpack:
   - "**/*.node"
-npmRebuild: true
+# better-sqlite3 is rebuilt for Electron by `npm run rebuild:electron` (part of `npm run dist`);
+# electron-builder's own rebuild does not reach the hoisted workspace copy.
+npmRebuild: false
+executableName: StoreManager
 win:
   target:
     - target: nsis

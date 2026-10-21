@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { STATE_CODES, type CustomerRow } from '@store/shared';
 import { useApp } from '../AppState';
-import { call } from '../lib/api';
+import { call, central } from '../lib/api';
 import { useAsync } from '../lib/hooks';
 import { dateTime, money } from '../lib/format';
 import { DataTable } from '../components/DataTable';
@@ -70,8 +70,15 @@ export function CustomersPage() {
 }
 
 function HistoryDialog({ customer, onClose }: { customer: CustomerRow; onClose: () => void }) {
-  const rows = useAsync(() => call('customers.history', { id: customer.id }) as Promise<any[]>, [customer.id]);
+  const { info } = useApp();
+  const online = !!info?.session?.online;
+  // Online: every branch the user may see (central). Offline: invoices made on this computer.
+  const rows = useAsync(
+    async () => (online ? central<any[]>('GET', `/api/customers/${customer.id}/history`).catch(() => call('customers.history', { id: customer.id }) as Promise<any[]>) : (call('customers.history', { id: customer.id }) as Promise<any[]>)),
+    [customer.id, online],
+  );
   const [sale, setSale] = useState<ApiResult<'sales.get'> | null>(null);
+  const { notify } = useApp();
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Purchase history — {customer.name}</DialogTitle>
@@ -88,10 +95,28 @@ function HistoryDialog({ customer, onClose }: { customer: CustomerRow; onClose: 
           </TableHead>
           <TableBody>
             {(rows.data ?? []).map((r) => (
-              <TableRow key={r.id} hover sx={{ cursor: 'pointer' }} onClick={async () => setSale(await call('sales.get', { id: r.id }))}>
-                <TableCell>{r.invoiceNo}</TableCell>
+              <TableRow
+                key={r.id}
+                hover
+                sx={{ cursor: 'pointer' }}
+                onClick={async () => {
+                  try {
+                    setSale(await call('sales.get', { id: r.id }));
+                  } catch {
+                    notify(`Invoice ${r.invoiceNo} was made at ${r.locationName ?? 'another computer'}; open it there to reprint or return.`, 'info');
+                  }
+                }}
+              >
+                <TableCell>
+                  {r.invoiceNo}
+                  {r.locationName && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      {r.locationName}
+                    </Typography>
+                  )}
+                </TableCell>
                 <TableCell>{dateTime(r.occurredAt)}</TableCell>
-                <TableCell align="right">{r.items}</TableCell>
+                <TableCell align="right">{r.items ?? ''}</TableCell>
                 <TableCell align="right">{money(r.grandTotal)}</TableCell>
                 <TableCell align="right">{r.refunded ? money(r.refunded) : ''}</TableCell>
               </TableRow>

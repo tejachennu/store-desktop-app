@@ -99,9 +99,61 @@ Locally cached inventory is **not** global stock. The rules that keep the ledger
   the cursor (global `server_seq` sequence) for this device's location. Pull always
   runs after push; documents with unsent local events are not overwritten.
 
+## Data model
+
+Central PostgreSQL (`apps/server/src/db/migrations/001_init.sql`) — single company per deployment:
+
+| Area | Tables |
+|---|---|
+| Organisation | `company` (settings & business rules), `locations` (type `WAREHOUSE` \| `BRANCH`, state code, GSTIN, invoice prefix, may receive purchases), `users`, `user_locations`, `devices` |
+| Catalogue | `categories`, `products` (SKU, HSN, GST rate, prices, MRP, variant group/attributes, image), `product_barcodes` (barcode → product × pack factor) |
+| Partners | `suppliers`, `customers` |
+| Inventory | `stock_movements` (append-only ledger; id = causing document line), `stock_levels` (derived on-hand + weighted average cost per location × product), `stock_adjustments` (+ lines) |
+| Sales | `sales`, `sale_lines` (qty returned tracked), `sale_returns` (+ lines), `payments` (sale payments and refunds, cash net of change) |
+| Purchasing | `purchase_orders` (+ lines), `goods_receipts` (GRN = purchase invoice record, + lines), `purchase_returns` (+ lines), `supplier_payments` |
+| Transfers | `stock_transfers`, `transfer_lines` (requested / approved / dispatched / received / damaged), `transfer_dispatches` & `transfer_receipts` (+ lines, partial steps), `transfer_history` |
+| Control | `reconciliation_items` (negative stock, transfer conflicts and discrepancies, rejected events), `sync_inbox` (one row per event id), `audit_logs` (append-only), `sync_counter` + `server_seq` columns (incremental pull), `doc_counters` |
+
+Local SQLite (`apps/desktop/src/core/db/migrations.ts`) mirrors what one location needs:
+cached master data, the location's ledger (`stock_movements` with origin `LOCAL`/`REMOTE`,
+`stock_levels`), its sales, returns, payments, GRNs, purchase returns, supplier payments,
+adjustments, transfers that involve it, purchase orders for it, plus `outbox`, `sync_log`,
+`audit_log`, `doc_counters`, `user_credentials` (offline verifiers) and `meta`
+(device registration, pull cursor, settings, preferences).
+
+Reserved stock is not stored: it is the approved-but-not-dispatched quantity of open
+outgoing transfers, so it can never drift.
+
+Document numbers are generated per device so they work offline and are unique
+company-wide: `<prefix><device no>/<FY>/<seq>`, e.g. invoice `B11/2627/00042`, credit note
+`B1R1/2627/00003`, transfer `TBR11/2627/00007`, GRN `GWHA1/2627/00012`.
+
+## API and screens
+
+The REST surface is listed in [API.md](API.md); the sync protocol in [SYNC.md](SYNC.md).
+The renderer calls a single IPC method table (`apps/desktop/src/core/api.ts`): local
+operations run against SQLite; screens that edit master data or show consolidated data
+call the central API through the main process with the signed-in user's token (the token
+never reaches the renderer).
+
+| Screen | Works offline | Central (online) features |
+|---|---|---|
+| Dashboard | location KPIs, charts, transfers needing action, pending sync | company-wide sales, stock by location, branch sales, review queue |
+| Point of sale | yes | — |
+| Sales & returns | yes (invoices of this PC) | — |
+| Inventory | levels, movements, adjustments, opening stock | stock at all locations |
+| Transfers | create, approve, reject, cancel, dispatch, receive, close | discrepancy & conflict resolution |
+| Purchases | GRN, purchase returns, supplier payments, cached POs | create / place / cancel purchase orders |
+| Products, suppliers | browse | create & edit, supplier ledger, price history |
+| Customers | create, edit, history on this PC | company-wide history |
+| Reports | location sales, HSN, GST | consolidated sales, GST, stock valuation, purchases, transfers, returns, audit |
+| Synchronisation | outbox, retry, log | stock check vs central, device health, server rejected events |
+| Administration | — | company settings, locations, users & roles, devices |
+| Settings & backup | printer, backups, restore | — |
+
 ## Security
 
-* Server: scrypt password hashes, short-lived JWT access tokens, device API keys
+* Server: scrypt password hashes, expiring JWT access tokens (default 8 h, revoked on password change or deactivation), device API keys
   (hashed at rest) for sync, role + location authorisation on every route and every
   sync event, Zod validation, Helmet, login rate limiting, audit log.
 * Desktop: renderer is sandboxed (`contextIsolation`, no `nodeIntegration`), only a

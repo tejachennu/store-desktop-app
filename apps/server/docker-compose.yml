@@ -1,0 +1,33 @@
+# Central server stack for a small deployment or staging:
+#   JWT_SECRET=$(openssl rand -base64 48) POSTGRES_PASSWORD=... docker compose -f apps/server/docker-compose.yml up -d
+# Put an HTTPS reverse proxy in front of port 4000 before exposing it to branch PCs.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: store
+      POSTGRES_USER: store
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U store"]
+      interval: 10s
+    restart: unless-stopped
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/server/Dockerfile
+    environment:
+      DATABASE_URL: postgres://store:${POSTGRES_PASSWORD}@db:5432/store
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      PORT: 4000
+      BUSINESS_TZ: Asia/Kolkata
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  pgdata:
