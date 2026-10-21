@@ -46,6 +46,29 @@ password `Demo@1234`.
 SQLite access uses `better-sqlite3`, whose Node-API prebuilt binaries load in both Node
 (tests) and Electron without rebuilding.
 
+### Running on macOS (development / evaluation)
+
+The production target is Windows, but the app runs on macOS (Intel and Apple Silicon)
+for development and demos:
+
+```bash
+brew install node@22 postgresql@16
+brew services start postgresql@16
+psql postgres -c "CREATE USER store WITH PASSWORD 'store' CREATEDB;" -c "CREATE DATABASE store OWNER store;"
+
+git clone https://github.com/tejachennu/store-desktop-app.git && cd store-desktop-app
+npm install
+cp apps/server/.env.example apps/server/.env
+npm run seed -w @store/server -- --demo
+npm run server:dev        # terminal 1 — API on http://localhost:4000
+npm run desktop:dev       # terminal 2 — first run downloads Electron (~100 MB)
+```
+
+On macOS the local data lives in `~/Library/Application Support/StoreCo/StoreManager`
+(delete that folder to start the first-run wizard again) and the device key is stored in
+the macOS Keychain. Stop the API (Ctrl+C in terminal 1) to try offline billing; restart it
+and the app synchronises automatically.
+
 ## Tests
 
 ```bash
