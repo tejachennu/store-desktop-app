@@ -1,0 +1,28 @@
+appId: com.storeco.storemanager
+productName: Store Manager
+copyright: Copyright © StoreCo
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - package.json
+# Native SQLite binding must live outside the asar archive.
+asarUnpack:
+  - "**/*.node"
+npmRebuild: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: StoreManager-Setup-${version}.${ext}
+  # Code signing: set CSC_LINK / CSC_KEY_PASSWORD in the build environment.
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Store Manager
+  # Business data lives in %LOCALAPPDATA%\StoreCo\StoreManager and is never removed by the uninstaller.
+  deleteAppDataOnUninstall: false

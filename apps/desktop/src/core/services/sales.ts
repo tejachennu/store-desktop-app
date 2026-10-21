@@ -7,7 +7,6 @@ import {
   hasPermission,
   PAYMENT_METHODS,
   uuidv7,
-  type CustomerInput,
   type SalePayload,
 } from '@store/shared';
 import type { DB } from '../db/connection';
@@ -25,7 +24,7 @@ import { auditLocal } from './audit';
 // Customers (can be created offline at the POS)
 // ---------------------------------------------------------------------------
 
-export function upsertCustomer(ctx: CoreContext, raw: Omit<CustomerInput, 'id'> & { id?: string }) {
+export function upsertCustomer(ctx: CoreContext, raw: Omit<z.input<typeof customerInputSchema>, 'id'> & { id?: string }) {
   const { session, device } = requireHere(ctx, 'customers.manage');
   const c = customerInputSchema.parse({ ...raw, id: raw.id ?? uuidv7() });
   const db = ctx.db;
