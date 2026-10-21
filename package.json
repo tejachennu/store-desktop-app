@@ -1,0 +1,23 @@
+{
+  "name": "store-management",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Offline-first multi-warehouse & multi-branch store management (Electron + React + Node.js + SQLite + PostgreSQL)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run typecheck",
+    "server:dev": "npm run dev -w @store/server",
+    "server:migrate": "npm run migrate -w @store/server",
+    "server:seed": "npm run seed -w @store/server",
+    "desktop:dev": "npm run dev -w @store/desktop",
+    "desktop:dist": "npm run dist -w @store/desktop"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
