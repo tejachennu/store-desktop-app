@@ -80,7 +80,7 @@ export function receiptHtml(sale: Sale, ctx: Ctx, widthMm: 58 | 80 = 80): string
       ${sale.roundOff ? `<tr><td>Round off</td><td class="r" colspan="2">${formatINR(sale.roundOff)}</td></tr>` : ''}
       <tr class="big"><td>TOTAL</td><td class="r" colspan="2">${formatINR(sale.grandTotal)}</td></tr>
     </table><hr>
-    <table>${pays}${sale.change ? `<tr><td>Change</td><td class="r" colspan="2">${formatINR(sale.change)}</td></tr>` : ''}</table><hr>
+    <table>${pays}${sale.change ? `<tr><td>Cash tendered</td><td class="r" colspan="2">${formatINR(sale.payments.filter((p) => p.method === 'CASH').reduce((s, p) => s + p.amount, 0) + sale.change)}</td></tr><tr><td>Change</td><td class="r" colspan="2">${formatINR(sale.change)}</td></tr>` : ''}</table><hr>
     <div class="c">${esc(ctx.settings.receiptFooter ?? 'Thank you! Visit again.')}</div>
   </body></html>`;
 }
@@ -138,7 +138,7 @@ export function invoiceHtml(sale: Sale, ctx: Ctx): string {
         <tr><td>IGST</td><td class="r">${formatINR(sale.igstTotal)}</td></tr>
         <tr><td>Round off</td><td class="r">${formatINR(sale.roundOff)}</td></tr>
         <tr><td><b>Grand total</b></td><td class="r"><b>${formatINR(sale.grandTotal)}</b></td></tr>
-        <tr><td>Paid (${esc(sale.payments.map((p) => p.method).join(' + ') || '—')})</td><td class="r">${formatINR(sale.tendered)}</td></tr>
+        <tr><td>Paid (${esc(sale.payments.map((p) => p.method).join(' + ') || '—')})</td><td class="r">${formatINR(sale.payments.reduce((s, p) => s + p.amount, 0))}</td></tr>
       </table>
     </div></div>
     <p style="margin-top:32px;text-align:right">For ${esc(ctx.settings.name)}<br><br><br>Authorised signatory</p>

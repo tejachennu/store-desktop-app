@@ -109,7 +109,7 @@ app.whenReady().then(async () => {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          isDev
+          isDev && process.env.ELECTRON_RENDERER_URL
             ? "default-src 'self' 'unsafe-inline' http://localhost:* ws://localhost:*; img-src 'self' data: blob:"
             : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:",
         ],

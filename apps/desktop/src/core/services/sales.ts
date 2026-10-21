@@ -249,7 +249,18 @@ export function createSale(ctx: CoreContext, raw: SaleInput): SaleDetail {
       return line;
     });
 
-    const paymentRows = payments.map((p) => ({ id: uuidv7(), method: p.method, amount: p.amount, reference: p.reference ?? null }));
+    // Payments record the amount applied to the bill: change is handed back from cash,
+    // so cash collected in reports is net of change. Tendered/change stay on the sale.
+    let changeLeft = change;
+    const paymentRows = [...payments]
+      .reverse()
+      .map((p) => {
+        const back = p.method === 'CASH' ? Math.min(changeLeft, p.amount) : 0;
+        changeLeft -= back;
+        return { id: uuidv7(), method: p.method, amount: p.amount - back, reference: p.reference ?? null };
+      })
+      .reverse()
+      .filter((p) => p.amount > 0);
     for (const p of paymentRows) {
       db.prepare(`INSERT INTO payments (id, ref_type, ref_id, method, amount, reference, occurred_at) VALUES (?, 'SALE', ?, ?, ?, ?, ?)`).run(
         p.id, id, p.method, p.amount, p.reference, now,

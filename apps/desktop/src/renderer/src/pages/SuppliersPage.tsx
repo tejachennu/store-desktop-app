@@ -111,7 +111,7 @@ function SupplierDialog({ supplier, onClose, onSaved }: { supplier: SupplierRow 
           <TextField label="Name" value={f.name} onChange={set('name')} autoFocus />
           <Stack direction="row" spacing={2}>
             <TextField label="GSTIN" value={f.gstin} onChange={set('gstin')} fullWidth />
-            <TextField select label="State" value={f.stateCode} onChange={set('stateCode')} fullWidth>
+            <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="State" value={f.stateCode} onChange={set('stateCode')} fullWidth>
               <MenuItem value="">—</MenuItem>
               {Object.entries(STATE_CODES).map(([c, n]) => (
                 <MenuItem key={c} value={c}>

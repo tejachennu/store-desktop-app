@@ -124,7 +124,10 @@ export function createHandlers(core: StoreCore) {
     },
     'catalog.findBarcode': (a: { code: string }) => {
       requireSession(core.ctx);
-      return catalog.findByBarcode(db(), str(64).parse(a.code));
+      const hit = catalog.findByBarcode(db(), str(64).parse(a.code));
+      if (!hit) return null;
+      const qtyOnHand = core.ctx.device ? stock.onHand(db(), core.ctx.device.locationId, hit.product.id) : null;
+      return { ...hit, product: { ...hit.product, qtyOnHand } };
     },
     'catalog.categories': () => {
       requireSession(core.ctx);

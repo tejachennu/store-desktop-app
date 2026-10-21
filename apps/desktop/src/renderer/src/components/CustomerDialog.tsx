@@ -65,7 +65,7 @@ export function CustomerDialog({
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField label="GSTIN (for B2B invoices)" value={form.gstin} onChange={set('gstin')} fullWidth />
-            <TextField select label="State (place of supply)" value={form.stateCode} onChange={set('stateCode')} fullWidth>
+            <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="State (place of supply)" value={form.stateCode} onChange={set('stateCode')} fullWidth>
               <MenuItem value="">Same as branch</MenuItem>
               {Object.entries(STATE_CODES).map(([code, name]) => (
                 <MenuItem key={code} value={code}>

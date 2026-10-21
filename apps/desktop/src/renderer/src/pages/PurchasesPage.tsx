@@ -451,7 +451,7 @@ function GrnDialog({ poId, onClose, onDone }: { poId?: string; onClose: () => vo
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Stack direction="row" spacing={2}>
-            <TextField select label="Against purchase order (optional)" value={orderId} onChange={(e) => setOrderId(e.target.value)} sx={{ minWidth: 260 }}>
+            <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Against purchase order (optional)" value={orderId} onChange={(e) => setOrderId(e.target.value)} sx={{ minWidth: 260 }}>
               <MenuItem value="">No purchase order</MenuItem>
               {(openOrders.data ?? [])
                 .filter((o) => ['ORDERED', 'PARTIALLY_RECEIVED'].includes(o.status))
@@ -580,7 +580,7 @@ function PurchaseReturnDialog({ onClose, onDone }: { onClose: () => void; onDone
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Stack direction="row" spacing={2}>
             <SupplierSelect value={supplierId} onChange={setSupplierId} />
-            <TextField select label="Against GRN (optional)" value={grnId} onChange={(e) => setGrnId(e.target.value)} sx={{ minWidth: 240 }}>
+            <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Against GRN (optional)" value={grnId} onChange={(e) => setGrnId(e.target.value)} sx={{ minWidth: 240 }}>
               <MenuItem value="">—</MenuItem>
               {(grns.data ?? []).map((g) => (
                 <MenuItem key={g.id} value={g.id}>

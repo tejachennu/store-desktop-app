@@ -185,7 +185,7 @@ function CentralReports({ from, to }: { from: string; to: string }) {
           <MenuItem value="returns">Returns & refunds</MenuItem>
           {can('audit.view') && <MenuItem value="audit">User activity & audit log</MenuItem>}
         </TextField>
-        <TextField select label="Location" value={locationId} onChange={(e) => setLocationId(e.target.value)} sx={{ minWidth: 240 }}>
+        <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Location" value={locationId} onChange={(e) => setLocationId(e.target.value)} sx={{ minWidth: 240 }}>
           <MenuItem value="">{user?.allLocations ? 'All locations (consolidated)' : 'All my locations'}</MenuItem>
           {visibleLocations.map((l) => (
             <MenuItem key={l.id} value={l.id}>

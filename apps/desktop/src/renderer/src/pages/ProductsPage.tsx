@@ -77,7 +77,7 @@ export function ProductsPage() {
         searchPlaceholder="Name, SKU, brand, barcode…"
         toolbar={
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-            <TextField select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} sx={{ minWidth: 180 }}>
+            <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} sx={{ minWidth: 180 }}>
               <MenuItem value="">All categories</MenuItem>
               {(categories.data ?? []).map((c) => (
                 <MenuItem key={c.id} value={c.id}>
@@ -231,7 +231,7 @@ function ProductDialog({ product, categories, onClose, onSaved }: { product: Pro
               <TextField fullWidth label="Name" value={f.name} onChange={set('name')} required />
             </Grid>
             <Grid size={4}>
-              <TextField fullWidth select label="Category" value={f.categoryId} onChange={set('categoryId')}>
+              <TextField fullWidth select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Category" value={f.categoryId} onChange={set('categoryId')}>
                 <MenuItem value="">—</MenuItem>
                 {categories.map((c) => (
                   <MenuItem key={c.id} value={c.id}>
@@ -379,7 +379,7 @@ function CategoriesDialog({ categories, onClose, onChanged }: { categories: Cate
       <DialogContent>
         <Stack direction="row" spacing={1} sx={{ my: 1 }}>
           <TextField label="New category" value={name} onChange={(e) => setName(e.target.value)} sx={{ flex: 1 }} />
-          <TextField select label="Parent" value={parentId} onChange={(e) => setParentId(e.target.value)} sx={{ width: 180 }}>
+          <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Parent" value={parentId} onChange={(e) => setParentId(e.target.value)} sx={{ width: 180 }}>
             <MenuItem value="">—</MenuItem>
             {categories.map((c) => (
               <MenuItem key={c.id} value={c.id}>

@@ -40,6 +40,12 @@ describe('offline POS sale', () => {
     expect(sale.grandTotal).toBe(114600);
     expect(sale.roundOff).toBe(-20);
     expect(sale.change).toBe(120000 - 114600);
+    // Cash is recorded net of the change handed back.
+    expect(sale.tendered).toBe(120000);
+    expect(sale.payments.map((p) => [p.method, p.amount])).toEqual([
+      ['UPI', 100000],
+      ['CASH', 14600],
+    ]);
     expect(sale.invoiceNo).toBe('B11/' + sale.invoiceNo.split('/')[1] + '/00001');
     expect(sale.cgstTotal + sale.sgstTotal).toBe(sale.lines.reduce((s, l) => s + l.cgst + l.sgst, 0));
     expect(onHand(core.db, ids.b1, ids.rice)).toBe(8);
@@ -70,7 +76,7 @@ describe('offline POS sale', () => {
   it('rolls back completely if the process fails mid-transaction', () => {
     const core = branchWithStock();
     // Simulate a crash/IO failure after lines and movements were written but before commit.
-    core.db.exec(`CREATE TEMP TRIGGER boom BEFORE INSERT ON payments WHEN NEW.amount = 11801 BEGIN SELECT RAISE(ABORT, 'disk I/O error'); END;`);
+    core.db.exec(`CREATE TEMP TRIGGER boom BEFORE INSERT ON payments WHEN NEW.method = 'CASH' BEGIN SELECT RAISE(ABORT, 'disk I/O error'); END;`);
     const before = { sales: count(core, 'sales'), lines: count(core, 'sale_lines'), outbox: count(core, 'outbox'), movements: count(core, 'stock_movements') };
     expect(() => createSale(core.ctx, { lines: [{ productId: ids.soap, qty: 1 }], payments: [{ method: 'CASH', amount: 11801 }] })).toThrow(/disk I\/O/);
     expect({ sales: count(core, 'sales'), lines: count(core, 'sale_lines'), outbox: count(core, 'outbox'), movements: count(core, 'stock_movements') }).toEqual(before);

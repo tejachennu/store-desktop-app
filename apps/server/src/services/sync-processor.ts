@@ -263,7 +263,8 @@ const saleCreate: Handler<'sale.create'> = async ({ tx, event, device }) => {
   if (sum(p.lines, (l) => l.discount) !== p.discountTotal) reject('Discount total mismatch');
   if (sum(p.lines, (l) => l.lineTotal) + p.roundOff !== p.grandTotal) reject('Grand total mismatch');
   const paid = sum(p.payments, (x) => x.amount);
-  if (paid !== p.tendered || paid - p.change !== p.grandTotal) reject('Payments do not match the bill total');
+  // Payments are amounts applied to the bill (cash net of change); tendered − change = bill.
+  if (paid !== p.grandTotal || p.tendered - p.change !== p.grandTotal) reject('Payments do not match the bill total');
 
   await tx.query(
     `INSERT INTO sales (id, invoice_no, location_id, device_id, user_id, customer_id, inter_state, gross_total, discount_total,

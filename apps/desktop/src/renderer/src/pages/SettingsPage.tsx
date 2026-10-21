@@ -70,7 +70,7 @@ export function SettingsPage() {
             </Typography>
             {prefs && (
               <Stack spacing={2}>
-                <TextField select label="Printer" value={prefs.receiptPrinter ?? ''} onChange={(e) => savePrefs({ receiptPrinter: e.target.value || null })}>
+                <TextField select slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }} label="Printer" value={prefs.receiptPrinter ?? ''} onChange={(e) => savePrefs({ receiptPrinter: e.target.value || null })}>
                   <MenuItem value="">System default</MenuItem>
                   {(printers.data ?? []).map((p) => (
                     <MenuItem key={p.name} value={p.name}>
