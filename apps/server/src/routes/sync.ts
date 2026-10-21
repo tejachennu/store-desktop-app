@@ -5,7 +5,7 @@ import type { AppContext } from '../context.js';
 import { many } from '../db/pool.js';
 import { requireDevice, requirePermission, requireUser } from '../middleware/auth.js';
 import { processPush } from '../services/sync-processor.js';
-import { pull } from '../services/pull.js';
+import { pull, refreshDocs } from '../services/pull.js';
 import { parse } from './util.js';
 
 export function syncRoutes(ctx: AppContext): Router {
@@ -24,8 +24,13 @@ export function syncRoutes(ctx: AppContext): Router {
   });
 
   r.get('/pull', requireDevice(ctx), async (req, res) => {
-    const { cursor } = parse(z.object({ cursor: z.string().regex(/^\d+$/).optional() }), req.query);
-    res.json(await pull(ctx, req.device!, cursor));
+    const { cursor, includeOwn } = parse(z.object({ cursor: z.string().regex(/^\d+$/).optional(), includeOwn: z.enum(['0', '1']).optional() }), req.query);
+    res.json(await pull(ctx, req.device!, cursor, { includeOwnMovements: includeOwn === '1' }));
+  });
+
+  r.post('/refresh', requireDevice(ctx), async (req, res) => {
+    const { ids } = parse(z.object({ ids: z.array(z.uuid()).min(1).max(200) }), req.body);
+    res.json(await refreshDocs(ctx, req.device!, ids));
   });
 
   r.get('/ping', requireDevice(ctx), async (req, res) => {

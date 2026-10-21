@@ -24,7 +24,12 @@ const SEQ_WINDOW = 500;
  * assigned in commit order (see migration 001), every change <= upto is
  * committed and visible in this snapshot.
  */
-export async function pull(ctx: AppContext, device: AuthedDevice, cursorRaw: string | undefined): Promise<PullResponse> {
+export async function pull(
+  ctx: AppContext,
+  device: AuthedDevice,
+  cursorRaw: string | undefined,
+  opts: { includeOwnMovements?: boolean } = {},
+): Promise<PullResponse> {
   const cursor = cursorRaw && /^\d+$/.test(cursorRaw) ? cursorRaw : '0';
   const result = await withTransaction(
     ctx.db,
@@ -52,11 +57,12 @@ export async function pull(ctx: AppContext, device: AuthedDevice, cursorRaw: str
         [...range, loc],
       );
       // Movements for this location written by sibling terminals or centrally (admin).
+      // After a local restore from backup the device also re-fetches its own movements.
       const movements = await many(
         tx,
         `SELECT ${MOVEMENT_COLS} FROM stock_movements m WHERE m.location_id = $3 AND m.server_seq > $1 AND m.server_seq <= $2
-           AND m.device_id IS DISTINCT FROM $4 ORDER BY m.server_seq, m.id`,
-        [...range, loc, device.id],
+           AND ($5::boolean OR m.device_id IS DISTINCT FROM $4) ORDER BY m.server_seq, m.id`,
+        [...range, loc, device.id, opts.includeOwnMovements ?? false],
       );
       return {
         cursor: upto.toString(),
@@ -77,4 +83,18 @@ export async function pull(ctx: AppContext, device: AuthedDevice, cursorRaw: str
   );
   await ctx.db.query('UPDATE devices SET last_pull_at = now() WHERE id = $1', [device.id]);
   return result;
+}
+
+/** Current server state of specific documents (used after the server rejected local changes to them). */
+export async function refreshDocs(ctx: AppContext, device: AuthedDevice, ids: string[]) {
+  const transfers = await many(
+    ctx.db,
+    `SELECT ${TRANSFER_COLS} FROM stock_transfers t WHERE t.id = ANY($1::uuid[]) AND (t.source_location_id = $2 OR t.dest_location_id = $2)`,
+    [ids, device.locationId],
+  );
+  const purchaseOrders = await many(ctx.db, `SELECT ${PO_COLS} FROM purchase_orders po WHERE po.id = ANY($1::uuid[]) AND po.location_id = $2`, [
+    ids,
+    device.locationId,
+  ]);
+  return { transfers, purchaseOrders };
 }
