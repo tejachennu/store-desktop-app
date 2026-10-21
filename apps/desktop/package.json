@@ -7,22 +7,19 @@
   "author": "StoreCo",
   "main": "out/main/index.js",
   "scripts": {
-    "dev": "npm run rebuild:electron && electron-vite dev",
+    "dev": "install-electron && electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
-    "test": "npm run rebuild:node --if-present >/dev/null 2>&1; vitest run",
-    "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
-    "rebuild:node": "cd ../.. && npm rebuild better-sqlite3",
-    "dist": "npm run rebuild:electron && electron-vite build && electron-builder --win --x64 --publish never",
-    "dist:dir": "npm run rebuild:electron && electron-vite build && electron-builder --dir",
-    "test:ui": "node e2e-ui/smoke.mjs"
+    "test": "vitest run",
+    "dist": "electron-vite build && electron-builder --win --x64 --publish never",
+    "dist:dir": "electron-vite build && electron-builder --dir",
+    "test:ui": "install-electron && node e2e-ui/smoke.mjs"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1"
+    "better-sqlite3": "^13.0.3"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.2.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",
@@ -33,7 +30,7 @@
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
-    "electron": "38.8.6",
+    "electron": "44.9.3",
     "electron-builder": "^26.0.12",
     "electron-vite": "^4.0.0",
     "pg": "^8.16.0",
@@ -44,7 +41,7 @@
     "recharts": "^3.2.0",
     "typescript": "~5.9.3",
     "vite": "^7.1.5",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.12",
     "zod": "^4.1.0"
   }
 }

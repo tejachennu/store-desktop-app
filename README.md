@@ -34,7 +34,7 @@ cp apps/server/.env.example apps/server/.env    # set DATABASE_URL and JWT_SECRE
 npm run seed -w @store/server -- --demo         # migrations + demo company, locations, users, products
 npm run server:dev                              # http://localhost:4000
 
-# 2. Desktop app (rebuilds the SQLite native module for Electron first)
+# 2. Desktop app
 npm run desktop:dev
 ```
 
@@ -43,9 +43,8 @@ In the app's first-run wizard enter `http://localhost:4000`, sign in as `admin` 
 (`whmanager`, `br1manager`, `br1cashier`, `br2cashier`, `purchase`, `accounts`) use the
 password `Demo@1234`.
 
-> `npm run desktop:dev` rebuilds `better-sqlite3` for Electron. Before running the
-> Node test suites again run `npm run rebuild:node -w @store/desktop` (the `test`
-> script does this automatically).
+SQLite access uses `better-sqlite3`, whose Node-API prebuilt binaries load in both Node
+(tests) and Electron without rebuilding.
 
 ## Tests
 

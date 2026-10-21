@@ -7,14 +7,21 @@ directories:
 files:
   - out/**
   - package.json
+  # SQLite C sources are only needed to compile from source; the prebuilt binary is used.
+  - "!**/node_modules/better-sqlite3/{deps,src}/**"
 # Native SQLite binding must live outside the asar archive.
 asarUnpack:
   - "**/*.node"
-# better-sqlite3 is rebuilt for Electron by `npm run rebuild:electron` (part of `npm run dist`);
-# electron-builder's own rebuild does not reach the hoisted workspace copy.
+# better-sqlite3 ships Node-API prebuilds (ABI-stable across Node and Electron): nothing to compile.
 npmRebuild: false
 executableName: StoreManager
+linux:
+  files:
+    - "!**/node_modules/better-sqlite3/prebuilds/{darwin,win32,linuxmusl}-*.node"
 win:
+  files:
+    # Ship only the Windows SQLite binaries.
+    - "!**/node_modules/better-sqlite3/prebuilds/{darwin,linux,linuxmusl}-*.node"
   target:
     - target: nsis
       arch: [x64]

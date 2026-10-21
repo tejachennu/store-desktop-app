@@ -60,7 +60,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run rebuild:electron -w @store/desktop
       - run: npm run build -w @store/desktop
       - run: xvfb-run -a npm run test:ui -w @store/desktop
         env:

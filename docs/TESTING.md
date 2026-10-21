@@ -19,10 +19,8 @@ CREATE USER store WITH PASSWORD 'store' CREATEDB;
 CREATE DATABASE store_test OWNER store;
 ```
 
-`better-sqlite3` is a native module. Electron and Node need different builds:
-`npm run rebuild:electron -w @store/desktop` before running the app,
-`npm run rebuild:node -w @store/desktop` before the Node test suites (the desktop
-`test` script does this automatically).
+`better-sqlite3` ships Node-API (ABI-stable) prebuilt binaries, so the same install
+works for the Node test suites and inside Electron — no rebuild step.
 
 ## Requirement → test map
 
@@ -47,7 +45,6 @@ CREATE DATABASE store_test OWNER store;
 
 ```bash
 createdb store_ui_smoke            # must be empty; the script seeds demo data
-npm run rebuild:electron -w @store/desktop
 npm run build -w @store/desktop
 DATABASE_URL=postgres://store:store@localhost:5432/store_ui_smoke npm run test:ui -w @store/desktop
 # Linux CI without a display: xvfb-run -a npm run test:ui -w @store/desktop

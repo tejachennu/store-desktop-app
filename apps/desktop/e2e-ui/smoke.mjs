@@ -2,7 +2,7 @@
  * UI smoke test of the packaged-mode Electron app against a real central API.
  *
  *   createdb store_ui_smoke
- *   npm run rebuild:electron -w @store/desktop && npm run build -w @store/desktop
+ *   npm run build -w @store/desktop
  *   DATABASE_URL=postgres://store:store@localhost:5432/store_ui_smoke node apps/desktop/e2e-ui/smoke.mjs
  *   (Linux without a display: prefix with `xvfb-run -a`)
  *

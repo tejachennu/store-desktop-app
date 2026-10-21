@@ -3,26 +3,30 @@
 The installer is built with **electron-builder** (NSIS, x64) from `apps/desktop`.
 
 ```powershell
-# On Windows 10/11 with Node.js 22 (Visual Studio Build Tools are only needed if no
-# prebuilt better-sqlite3 binary exists for the Electron version).
+# On Windows 10/11 with Node.js 22
 npm ci
 npm run dist -w @store/desktop
 # → apps/desktop/release/StoreManager-Setup-<version>.exe
 ```
 
-`npm run dist` runs three steps:
-
-1. `electron-rebuild -f -w better-sqlite3` — compiles (or downloads the prebuilt) SQLite
-   binding for the bundled Electron version. This is explicit because electron-builder's
-   own rebuild (`npmRebuild`, disabled) does not reach the hoisted workspace copy.
-2. `electron-vite build` — main, preload and renderer bundles in `apps/desktop/out/`.
-3. `electron-builder --win --x64` — packages the app; the native `.node` file is kept
-   outside the asar archive (`asarUnpack`).
-
-After packaging, run `npm run rebuild:node -w @store/desktop` before the Node test suites.
+`npm run dist` runs `electron-vite build` (main, preload and renderer bundles in
+`apps/desktop/out/`) and `electron-builder --win --x64`. SQLite access uses
+`better-sqlite3`, which ships Node-API prebuilt binaries for Windows, macOS and Linux
+(x64/arm64); they are ABI-stable, so nothing is compiled for the Electron version and no
+Visual Studio Build Tools are required. The `.node` binary is kept outside the asar
+archive (`asarUnpack`).
 
 The GitHub Actions workflow `.github/workflows/ci.yml` builds the installer on
 `windows-latest` for tags `v*` and manual runs, and uploads it as an artifact.
+
+## Electron version policy
+
+Electron ships inside the installer, so it is part of the product's security surface.
+Electron supports only the latest three major versions: keep `electron` (pinned exactly
+in `apps/desktop/package.json`, currently 44.x) on a supported major and take patch
+releases promptly. From Electron 44 the binary is no longer downloaded by
+`npm install`; `npm run desktop:dev` and `npm run test:ui` call `install-electron`
+first (electron-builder downloads its own copy when packaging).
 
 ## Installer behaviour (`apps/desktop/electron-builder.yml`)
 
@@ -65,6 +69,6 @@ event format or the API.
 ## Local development
 
 ```bash
-npm run desktop:dev        # rebuilds better-sqlite3 for Electron, starts Vite + Electron with reload
+npm run desktop:dev        # Vite + Electron with reload
 npm run dist:dir -w @store/desktop   # unpacked build for the current OS (quick packaging check)
 ```
